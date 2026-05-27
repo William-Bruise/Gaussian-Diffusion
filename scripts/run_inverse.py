@@ -25,7 +25,7 @@ def main():
     p.add_argument('--image_path', required=True)
     p.add_argument('--diffusion_ckpt', required=True)
     p.add_argument('--output_resolution', type=int, default=256)
-    p.add_argument('--num_gaussians', type=int, default=256)
+    p.add_argument('--num_gaussians', type=int, default=1024)
     args = p.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

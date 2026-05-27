@@ -5,7 +5,7 @@ import torch.nn as nn
 
 
 class GaussianEncoder(nn.Module):
-    def __init__(self, num_gaussians: int = 256, raw_dim: int = 8, base_ch: int = 64):
+    def __init__(self, num_gaussians: int = 1024, raw_dim: int = 8, base_ch: int = 64):
         super().__init__()
         self.num_gaussians = num_gaussians
         self.raw_dim = raw_dim

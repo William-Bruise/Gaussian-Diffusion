@@ -24,7 +24,7 @@ def main():
     p.add_argument('--data_root', default='data/ffhq/images')
     p.add_argument('--encoder_ckpt', required=True)
     p.add_argument('--image_size', type=int, default=128)
-    p.add_argument('--num_gaussians', type=int, default=256)
+    p.add_argument('--num_gaussians', type=int, default=1024)
     p.add_argument('--batch_size', type=int, default=8)
     p.add_argument('--epochs', type=int, default=1)
     args = p.parse_args()

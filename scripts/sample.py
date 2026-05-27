@@ -19,7 +19,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--diffusion_ckpt', required=True)
     p.add_argument('--num_samples', type=int, default=1)
-    p.add_argument('--num_gaussians', type=int, default=256)
+    p.add_argument('--num_gaussians', type=int, default=1024)
     p.add_argument('--resolutions', type=int, nargs='+', default=[128,256,512])
     args = p.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'

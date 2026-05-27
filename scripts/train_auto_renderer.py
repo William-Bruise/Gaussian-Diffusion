@@ -22,13 +22,15 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--data_root', default='data/ffhq/images')
     p.add_argument('--image_size', type=int, default=128)
-    p.add_argument('--num_gaussians', type=int, default=256)
+    p.add_argument('--num_gaussians', type=int, default=1024)
     p.add_argument('--batch_size', type=int, default=8)
     p.add_argument('--epochs', type=int, default=1)
     p.add_argument('--lr', type=float, default=1e-4)
+    p.add_argument('--run_name', type=str, default='default')
+    p.add_argument('--device', type=str, default='auto')
     args = p.parse_args()
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = ('cuda' if torch.cuda.is_available() else 'cpu') if args.device == 'auto' else args.device
     ds = FFHQDataset(args.data_root, 'train', args.image_size)
     dl = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
@@ -54,6 +56,7 @@ def main():
                 visualize_gaussians(params[:1], f'outputs/recon/ep{ep}_it{it}_overlay.png', args.image_size)
 
     Path('outputs/checkpoints').mkdir(parents=True, exist_ok=True)
+    torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians}, f'outputs/checkpoints/{args.run_name}_encoder.pt')
     torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians}, 'outputs/checkpoints/encoder.pt')
 
 

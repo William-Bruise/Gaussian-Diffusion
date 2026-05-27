@@ -24,7 +24,7 @@ If directory does not exist or has no images, script raises clear errors and doe
 python scripts/train_auto_renderer.py \
   --data_root data/ffhq/images \
   --image_size 128 \
-  --num_gaussians 256 \
+  --num_gaussians 1024 \
   --batch_size 8
 ```
 
@@ -33,7 +33,7 @@ python scripts/train_auto_renderer.py \
 python scripts/train_gaussian_diffusion.py \
   --data_root data/ffhq/images \
   --encoder_ckpt outputs/checkpoints/encoder.pt \
-  --num_gaussians 256
+  --num_gaussians 1024
 ```
 
 ## Sampling (multi-resolution from same Gaussian params)
@@ -55,3 +55,18 @@ python scripts/run_inverse.py \
 Supports `inpainting`, `super-resolution`, `denoising` with:
 - renderer-only baseline
 - renderer + diffusion-prior-inspired baseline
+
+
+## Recommended primitive count
+For 128x128 FFHQ, start from `--num_gaussians 1024` (or 512 if GPU memory is limited). `256` is usually too sparse for facial detail.
+
+## Sweep num_gaussians by experiment
+```bash
+python scripts/sweep_num_gaussians.py \
+  --data_root data/ffhq/images \
+  --image_size 128 \
+  --num_gaussians_list 512 1024 2048 4096 \
+  --epochs 1 \
+  --max_val_images 32
+```
+Outputs CSV: `outputs/sweeps/num_gaussians_sweep.csv`
