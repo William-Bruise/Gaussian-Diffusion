@@ -21,7 +21,7 @@ from scripts.common import save_tensor_image
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--data_root', default='/home/wuweihao/Datasets/FFHQ')
+    p.add_argument('--data_root', default='data/ffhq/images')
     p.add_argument('--encoder_ckpt', required=True)
     p.add_argument('--image_size', type=int, default=128)
     p.add_argument('--num_gaussians', type=int, default=256)

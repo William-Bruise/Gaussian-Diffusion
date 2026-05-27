@@ -30,7 +30,7 @@ def split_paths(paths: List[Path], val_ratio: float = 0.05) -> FFHQSplit:
 
 
 class FFHQDataset(Dataset):
-    def __init__(self, data_root: str = "/home/wuweihao/Datasets/FFHQ", split: str = "train", image_size: int = 128, val_ratio: float = 0.05):
+    def __init__(self, data_root: str = "data/ffhq/images", split: str = "train", image_size: int = 128, val_ratio: float = 0.05):
         self.root = Path(data_root)
         if not self.root.exists():
             raise FileNotFoundError(
