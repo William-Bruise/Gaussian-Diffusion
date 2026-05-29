@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from datasets.ffhq import FFHQDataset
 from metrics.image_metrics import l1 as l1_metric, psnr as psnr_metric, ssim as ssim_metric
-from models.encoder import GaussianEncoder
+from models.encoder import build_gaussian_encoder
 from models.gaussian_params import GaussianParamConfig, GaussianParametrization
 from renderers.gaussian_renderer import GaussianRenderer
 
@@ -22,19 +22,21 @@ def main() -> None:
     p.add_argument('--data_root', default='data/ffhq/images')
     p.add_argument('--split', default='val', choices=['train', 'val'])
     p.add_argument('--image_size', type=int, default=128)
-    p.add_argument('--num_gaussians', type=int, default=1024)
+    p.add_argument('--num_gaussians', type=int, default=4096)
     p.add_argument('--encoder_ckpt', required=True)
     p.add_argument('--batch_size', type=int, default=4)
     p.add_argument('--max_images', type=int, default=32)
     p.add_argument('--device', default='auto')
+    p.add_argument('--encoder_type', choices=['auto', 'spatial', 'global'], default='auto')
     args = p.parse_args()
 
     device = ('cuda' if torch.cuda.is_available() else 'cpu') if args.device == 'auto' else args.device
     ds = FFHQDataset(args.data_root, args.split, args.image_size)
     dl = DataLoader(ds, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    enc = GaussianEncoder(args.num_gaussians).to(device)
     ckpt = torch.load(args.encoder_ckpt, map_location=device)
+    encoder_type = ckpt.get('encoder_type', 'global') if args.encoder_type == 'auto' else args.encoder_type
+    enc = build_gaussian_encoder(encoder_type, args.num_gaussians).to(device)
     enc.load_state_dict(ckpt['encoder'])
     enc.eval()
 
@@ -48,12 +50,12 @@ def main() -> None:
             x = x.to(device)
             params = gp.constrain(enc(x))
             x_hat = renderer(params, args.image_size, args.image_size)
-            b = x.shape[0]
-            for i in range(b):
+            keep = min(x.shape[0], args.max_images - seen)
+            for i in range(keep):
                 acc_l1 += l1_metric(x_hat[i:i+1], x[i:i+1])
                 acc_psnr += psnr_metric(x_hat[i:i+1], x[i:i+1])
                 acc_ssim += ssim_metric(x_hat[i:i+1], x[i:i+1])
-            seen += b
+            seen += keep
             if seen >= args.max_images:
                 break
 

@@ -24,8 +24,9 @@ If directory does not exist or has no images, script raises clear errors and doe
 python scripts/train_auto_renderer.py \
   --data_root data/ffhq/images \
   --image_size 128 \
-  --num_gaussians 1024 \
-  --batch_size 8
+  --num_gaussians 4096 \
+  --batch_size 4 \
+  --encoder_type spatial
 ```
 
 ## Stage 2: train Gaussian parameter diffusion
@@ -33,7 +34,7 @@ python scripts/train_auto_renderer.py \
 python scripts/train_gaussian_diffusion.py \
   --data_root data/ffhq/images \
   --encoder_ckpt outputs/checkpoints/encoder.pt \
-  --num_gaussians 1024
+  --num_gaussians 4096
 ```
 
 ## Sampling (multi-resolution from same Gaussian params)
@@ -58,15 +59,16 @@ Supports `inpainting`, `super-resolution`, `denoising` with:
 
 
 ## Recommended primitive count
-For 128x128 FFHQ, start from `--num_gaussians 1024` (or 512 if GPU memory is limited). `256` is usually too sparse for facial detail.
+For 128x128 FFHQ, `4096` can still underfit if the encoder is weak or under-trained. New runs use `--encoder_type spatial`, which anchors primitives on a local grid; sweep `4096/8192/16384` and choose by validation PSNR/SSIM rather than guessing.
 
 ## Sweep num_gaussians by experiment
 ```bash
 python scripts/sweep_num_gaussians.py \
   --data_root data/ffhq/images \
   --image_size 128 \
-  --num_gaussians_list 512 1024 2048 4096 \
-  --epochs 1 \
-  --max_val_images 32
+  --num_gaussians_list 4096 8192 16384 \
+  --epochs 5 \
+  --max_val_images 32 \
+  --encoder_type spatial
 ```
 Outputs CSV: `outputs/sweeps/num_gaussians_sweep.csv`

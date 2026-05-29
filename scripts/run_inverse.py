@@ -25,7 +25,7 @@ def main():
     p.add_argument('--image_path', required=True)
     p.add_argument('--diffusion_ckpt', required=True)
     p.add_argument('--output_resolution', type=int, default=256)
-    p.add_argument('--num_gaussians', type=int, default=1024)
+    p.add_argument('--num_gaussians', type=int, default=None)
     args = p.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -41,11 +41,13 @@ def main():
         op = IdentityOperator(); x = x + 0.1*torch.randn_like(x)
     y = op(x)
 
+    ckpt = torch.load(args.diffusion_ckpt, map_location=device)
+    num_gaussians = args.num_gaussians or ckpt.get('num_gaussians', 4096)
     ddpm = GaussianDDPM(PrimitiveDenoiser(raw_dim=8)).to(device)
-    ddpm.load_state_dict(torch.load(args.diffusion_ckpt, map_location=device)['ddpm']); ddpm.eval()
-    gp = GaussianParametrization(GaussianParamConfig(num_gaussians=args.num_gaussians))
+    ddpm.load_state_dict(ckpt['ddpm']); ddpm.eval()
+    gp = GaussianParametrization(GaussianParamConfig(num_gaussians=num_gaussians))
 
-    z_init = gp.denormalize(ddpm.sample((1,args.num_gaussians,8), device)).detach()
+    z_init = gp.denormalize(ddpm.sample((1,num_gaussians,8), device)).detach()
     prior_energy = lambda z: (z ** 2).mean()
     z_prior, x_prior = solve_inverse_problem(y, op, renderer, z_init, prior_energy=prior_energy, iters=200)
     z_base, x_base = solve_inverse_problem(y, op, renderer, z_init, prior_energy=None, iters=200)

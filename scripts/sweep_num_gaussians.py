@@ -22,11 +22,12 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Sweep Gaussian primitive counts and record reconstruction quality.")
     p.add_argument("--data_root", default="data/ffhq/images")
     p.add_argument("--image_size", type=int, default=128)
-    p.add_argument("--num_gaussians_list", type=int, nargs="+", default=[512, 1024, 2048, 4096])
+    p.add_argument("--num_gaussians_list", type=int, nargs="+", default=[4096, 8192, 16384])
     p.add_argument("--batch_size", type=int, default=8)
     p.add_argument("--epochs", type=int, default=1)
     p.add_argument("--max_val_images", type=int, default=32)
     p.add_argument("--device", default="auto")
+    p.add_argument("--encoder_type", choices=["spatial", "global"], default="spatial")
     p.add_argument("--out_csv", default="outputs/sweeps/num_gaussians_sweep.csv")
     args = p.parse_args()
 
@@ -47,6 +48,7 @@ def main() -> None:
             "--batch_size", str(args.batch_size),
             "--epochs", str(args.epochs),
             "--run_name", run_name,
+            "--encoder_type", args.encoder_type,
         ]
         if args.device != "auto":
             train_cmd += ["--device", args.device]
@@ -88,6 +90,7 @@ def main() -> None:
             "ssim": ssim,
             "elapsed_sec": round(time.time() - t0, 2),
             "run_name": run_name,
+            "encoder_type": args.encoder_type,
         })
 
         with out_csv.open("w", newline="") as f:

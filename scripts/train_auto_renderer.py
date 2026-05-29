@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from datasets.ffhq import FFHQDataset
-from models.encoder import GaussianEncoder
+from models.encoder import build_gaussian_encoder
 from models.gaussian_params import GaussianParamConfig, GaussianParametrization
 from renderers.gaussian_renderer import GaussianRenderer, visualize_gaussians
 from scripts.common import save_tensor_image
@@ -22,19 +22,20 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--data_root', default='data/ffhq/images')
     p.add_argument('--image_size', type=int, default=128)
-    p.add_argument('--num_gaussians', type=int, default=1024)
-    p.add_argument('--batch_size', type=int, default=8)
+    p.add_argument('--num_gaussians', type=int, default=4096)
+    p.add_argument('--batch_size', type=int, default=4)
     p.add_argument('--epochs', type=int, default=1)
     p.add_argument('--lr', type=float, default=1e-4)
     p.add_argument('--run_name', type=str, default='default')
     p.add_argument('--device', type=str, default='auto')
+    p.add_argument('--encoder_type', choices=['spatial', 'global'], default='spatial')
     args = p.parse_args()
 
     device = ('cuda' if torch.cuda.is_available() else 'cpu') if args.device == 'auto' else args.device
     ds = FFHQDataset(args.data_root, 'train', args.image_size)
     dl = DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-    enc = GaussianEncoder(args.num_gaussians).to(device)
+    enc = build_gaussian_encoder(args.encoder_type, args.num_gaussians).to(device)
     renderer = GaussianRenderer().to(device)
     gparam = GaussianParametrization(GaussianParamConfig(num_gaussians=args.num_gaussians))
     opt = torch.optim.Adam(enc.parameters(), lr=args.lr)
@@ -56,8 +57,8 @@ def main():
                 visualize_gaussians(params[:1], f'outputs/recon/ep{ep}_it{it}_overlay.png', args.image_size)
 
     Path('outputs/checkpoints').mkdir(parents=True, exist_ok=True)
-    torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians}, f'outputs/checkpoints/{args.run_name}_encoder.pt')
-    torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians}, 'outputs/checkpoints/encoder.pt')
+    torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians, 'encoder_type': args.encoder_type}, f'outputs/checkpoints/{args.run_name}_encoder.pt')
+    torch.save({'encoder': enc.state_dict(), 'num_gaussians': args.num_gaussians, 'encoder_type': args.encoder_type}, 'outputs/checkpoints/encoder.pt')
 
 
 if __name__ == '__main__':

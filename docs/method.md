@@ -10,6 +10,9 @@ Renderer:
 `G_i(u)=exp(-0.5*(((x-cx_i)^2/sx_i^2)+((y-cy_i)^2/sy_i^2)))`
 `I(u)=sum_i alpha_i*G_i(u)*c_i / (sum_i alpha_i*G_i(u)+eps)`.
 
+
+Encoder note: the default auto-renderer now uses a spatial, grid-anchored encoder for large `N`. The old global-vector encoder is kept only for compatibility; with thousands of primitives it can bottleneck reconstruction because all primitives are predicted from a single pooled feature.
+
 Two-stage training:
 1) image -> Gaussian parameters: train encoder + renderer by reconstruction.
 2) diffusion over normalized Gaussian parameters from encoder outputs.

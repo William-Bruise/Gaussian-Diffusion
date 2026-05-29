@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class GaussianParamConfig:
-    num_gaussians: int = 1024
+    num_gaussians: int = 4096
     raw_dim: int = 8
     scale_min: float = 0.01
     scale_max: float = 0.5

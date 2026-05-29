@@ -19,19 +19,21 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--diffusion_ckpt', required=True)
     p.add_argument('--num_samples', type=int, default=1)
-    p.add_argument('--num_gaussians', type=int, default=1024)
+    p.add_argument('--num_gaussians', type=int, default=None)
     p.add_argument('--resolutions', type=int, nargs='+', default=[128,256,512])
     args = p.parse_args()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    ckpt = torch.load(args.diffusion_ckpt, map_location=device)
+    num_gaussians = args.num_gaussians or ckpt.get('num_gaussians', 4096)
     ddpm = GaussianDDPM(PrimitiveDenoiser(raw_dim=8)).to(device)
-    ddpm.load_state_dict(torch.load(args.diffusion_ckpt, map_location=device)['ddpm'])
+    ddpm.load_state_dict(ckpt['ddpm'])
     ddpm.eval()
     renderer = GaussianRenderer().to(device)
-    gp = GaussianParametrization(GaussianParamConfig(num_gaussians=args.num_gaussians))
+    gp = GaussianParametrization(GaussianParamConfig(num_gaussians=num_gaussians))
 
     for i in range(args.num_samples):
-        z = ddpm.sample((1, args.num_gaussians, 8), device)
+        z = ddpm.sample((1, num_gaussians, 8), device)
         params = gp.denormalize(z)
         for r in args.resolutions:
             img = renderer(params, r, r)
